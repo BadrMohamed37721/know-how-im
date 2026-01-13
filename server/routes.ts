@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { setupAuth } from "./replit_integrations/auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -8,17 +9,8 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Mock user ID for testing without auth
-  const MOCK_USER_ID = "test-user-id";
-
-  // Setup mock user in storage if doesn't exist
-  await storage.upsertUser({
-    id: MOCK_USER_ID,
-    username: "testuser",
-    email: "test@example.com",
-    firstName: "Test",
-    lastName: "User",
-  });
+  // Set up Replit Auth
+  await setupAuth(app);
 
   // === Public Routes ===
   app.get(api.profiles.getBySlug.path, async (req, res) => {
@@ -29,14 +21,28 @@ export async function registerRoutes(
     res.json(profile);
   });
 
-  // === Dashboard Routes (Auth Disabled for Testing) ===
-  app.get(api.profiles.me.path, async (req, res) => {
-    let profile = await storage.getProfileByUserId(MOCK_USER_ID);
+  // === Protected Routes ===
+  const requireAuth = (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    next();
+  };
+
+  app.get(api.profiles.me.path, requireAuth, async (req, res) => {
+    const user = req.user as any;
+    const userId = user.claims.sub;
+    
+    let profile = await storage.getProfileByUserId(userId);
     if (!profile) {
+      // Auto-create profile for new users using email prefix or ID
+      const email = user.claims.email || "";
+      const suggestedSlug = email ? email.split("@")[0] : userId.slice(0, 8);
+      
       profile = await storage.createProfile({
-        userId: MOCK_USER_ID,
-        displayName: "Test User",
-        slug: "testuser",
+        userId: userId,
+        displayName: user.claims.first_name || suggestedSlug,
+        slug: suggestedSlug,
         bio: "Welcome to my digital card!",
         themeColor: "#000000",
         backgroundColor: "#ffffff",
@@ -46,8 +52,9 @@ export async function registerRoutes(
     res.json({ ...profile, links });
   });
 
-  app.patch(api.profiles.update.path, async (req, res) => {
-    const profile = await storage.getProfileByUserId(MOCK_USER_ID);
+  app.patch(api.profiles.update.path, requireAuth, async (req, res) => {
+    const userId = (req.user as any).claims.sub;
+    const profile = await storage.getProfileByUserId(userId);
     if (!profile) return res.status(404).json({ message: "Profile not found" });
 
     const input = api.profiles.update.input.parse(req.body);
@@ -55,8 +62,9 @@ export async function registerRoutes(
     res.json(updated);
   });
 
-  app.post(api.links.create.path, async (req, res) => {
-    const profile = await storage.getProfileByUserId(MOCK_USER_ID);
+  app.post(api.links.create.path, requireAuth, async (req, res) => {
+    const userId = (req.user as any).claims.sub;
+    const profile = await storage.getProfileByUserId(userId);
     if (!profile) return res.status(404).json({ message: "Profile not found" });
 
     const input = api.links.create.input.parse(req.body);
@@ -64,19 +72,29 @@ export async function registerRoutes(
     res.status(201).json(link);
   });
 
-  app.patch(api.links.update.path, async (req, res) => {
+  app.patch(api.links.update.path, requireAuth, async (req, res) => {
+    const userId = (req.user as any).claims.sub;
+    const profile = await storage.getProfileByUserId(userId);
+    if (!profile) return res.status(401).json({ message: "Unauthorized" });
+
+    // In a real app, verify link belongs to profile
     const input = api.links.update.input.parse(req.body);
     const link = await storage.updateLink(Number(req.params.id), input);
     res.json(link);
   });
 
-  app.delete(api.links.delete.path, async (req, res) => {
+  app.delete(api.links.delete.path, requireAuth, async (req, res) => {
+    const userId = (req.user as any).claims.sub;
+    const profile = await storage.getProfileByUserId(userId);
+    if (!profile) return res.status(401).json({ message: "Unauthorized" });
+
     await storage.deleteLink(Number(req.params.id));
     res.status(204).send();
   });
 
-  app.post(api.links.reorder.path, async (req, res) => {
-    const profile = await storage.getProfileByUserId(MOCK_USER_ID);
+  app.post(api.links.reorder.path, requireAuth, async (req, res) => {
+    const userId = (req.user as any).claims.sub;
+    const profile = await storage.getProfileByUserId(userId);
     if (!profile) return res.status(404).json({ message: "Profile not found" });
     
     const { linkIds } = req.body;

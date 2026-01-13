@@ -115,7 +115,7 @@ END:VCARD`;
           <Button 
             onClick={handleSaveContact}
             className="rounded-full shadow-lg hover:scale-105 transition-transform"
-            style={{ backgroundColor: profile.themeColor, color: "#fff" }}
+            style={{ backgroundColor: profile.themeColor || "#000000", color: "#fff" }}
           >
             <Download className="w-4 h-4 mr-2" />
             Save Contact

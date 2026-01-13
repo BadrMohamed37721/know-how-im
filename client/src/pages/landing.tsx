@@ -1,8 +1,31 @@
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Zap, Share2 } from "lucide-react";
+import { Smartphone, Zap, Share2, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
 
 export default function LandingPage() {
+  const { user, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (user && !isLoading) {
+      setLocation("/dashboard");
+    }
+  }, [user, isLoading, setLocation]);
+
+  const handleLogin = () => {
+    window.location.href = "/api/login";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -15,9 +38,11 @@ export default function LandingPage() {
               </span>
             </div>
             <div>
-              <Link href="/dashboard">
-                <Button>Go to Dashboard</Button>
-              </Link>
+              {user ? (
+                <Button onClick={() => setLocation("/dashboard")}>Go to Dashboard</Button>
+              ) : (
+                <Button onClick={handleLogin}>Log In / Sign Up</Button>
+              )}
             </div>
           </div>
         </div>
@@ -36,11 +61,9 @@ export default function LandingPage() {
               The smart, digital business card for modern professionals.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/dashboard">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/25 hover:-translate-y-1 transition-transform">
-                  Create Your Card
-                </Button>
-              </Link>
+              <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/25 hover:-translate-y-1 transition-transform" onClick={user ? () => setLocation("/dashboard") : handleLogin}>
+                {user ? "View Your Card" : "Create Your Card"}
+              </Button>
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   const form = useForm({
-    resolver: zodResolver(insertProfileSchema.omit({ id: true, userId: true }).partial()),
+    resolver: zodResolver(insertProfileSchema.omit({ id: true, userId: true }).partial() as any),
     defaultValues: {
       displayName: "",
       bio: "",
