@@ -2,7 +2,7 @@ import { useParams } from "wouter";
 import { usePublicProfile } from "@/hooks/use-profile";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, Share2 } from "lucide-react";
-import { SiInstagram, SiLinkedin, SiGithub, SiTwitter, SiYoutube, SiTiktok, SiFacebook, SiTwitch } from "react-icons/si";
+import { SiInstagram, SiLinkedin, SiGithub, SiX, SiYoutube, SiTiktok, SiFacebook, SiTwitch } from "react-icons/si";
 import { ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -10,7 +10,7 @@ const ICONS: Record<string, any> = {
   instagram: SiInstagram,
   linkedin: SiLinkedin,
   github: SiGithub,
-  twitter: SiTwitter,
+  twitter: SiX,
   youtube: SiYoutube,
   tiktok: SiTiktok,
   facebook: SiFacebook,

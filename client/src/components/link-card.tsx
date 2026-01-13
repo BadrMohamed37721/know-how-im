@@ -2,13 +2,13 @@ import { Link } from "@shared/schema";
 import { GripVertical, Trash2, Edit2, ExternalLink } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { SiInstagram, SiLinkedin, SiGithub, SiTwitter, SiYoutube, SiTiktok, SiFacebook, SiTwitch } from "react-icons/si";
+import { SiInstagram, SiLinkedin, SiGithub, SiX, SiYoutube, SiTiktok, SiFacebook, SiTwitch } from "react-icons/si";
 
 const ICONS: Record<string, any> = {
   instagram: SiInstagram,
   linkedin: SiLinkedin,
   github: SiGithub,
-  twitter: SiTwitter,
+  twitter: SiX,
   youtube: SiYoutube,
   tiktok: SiTiktok,
   facebook: SiFacebook,
