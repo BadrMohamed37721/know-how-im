@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./replit_integrations/auth";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -11,6 +12,10 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Set up Replit Auth
   await setupAuth(app);
+  registerAuthRoutes(app);
+  
+  // Set up Object Storage
+  registerObjectStorageRoutes(app);
 
   // === Public Routes ===
   app.get(api.profiles.getBySlug.path, async (req, res) => {
@@ -35,7 +40,6 @@ export async function registerRoutes(
     
     let profile = await storage.getProfileByUserId(userId);
     if (!profile) {
-      // Auto-create profile for new users using email prefix or ID
       const email = user.claims.email || "";
       const suggestedSlug = email ? email.split("@")[0] : userId.slice(0, 8);
       
@@ -77,7 +81,6 @@ export async function registerRoutes(
     const profile = await storage.getProfileByUserId(userId);
     if (!profile) return res.status(401).json({ message: "Unauthorized" });
 
-    // In a real app, verify link belongs to profile
     const input = api.links.update.input.parse(req.body);
     const link = await storage.updateLink(Number(req.params.id), input);
     res.json(link);

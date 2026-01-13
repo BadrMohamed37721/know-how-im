@@ -10,13 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, ExternalLink } from "lucide-react";
+import { Loader2, Save, ExternalLink, Upload } from "lucide-react";
 import { Link } from "wouter";
+import { useUpload } from "@/hooks/use-upload";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
   const { data: profile, isLoading } = useMyProfile();
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
+  const { uploadFile, isUploading } = useUpload();
 
   const form = useForm({
     resolver: zodResolver(insertProfileSchema.omit({ id: true, userId: true }).partial() as any),
@@ -42,6 +45,17 @@ export default function ProfilePage() {
       });
     }
   }, [profile, form]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const response = await uploadFile(file);
+      if (response) {
+        form.setValue("avatarUrl", response.objectPath);
+        toast({ title: "Success", description: "Image uploaded successfully. Don't forget to save changes!" });
+      }
+    }
+  };
 
   const onSubmit = async (data: any) => {
     try {
@@ -70,29 +84,64 @@ export default function ProfilePage() {
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input id="displayName" {...form.register("displayName")} />
-                {form.formState.errors.displayName && <p className="text-red-500 text-xs">{form.formState.errors.displayName.message}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="slug">Profile URL Slug</Label>
-                <div className="flex items-center">
-                  <span className="text-sm text-muted-foreground bg-gray-50 border border-r-0 rounded-l-xl px-3 py-[10px] h-11 border-input">
-                    /p/
-                  </span>
-                  <Input id="slug" className="rounded-l-none" {...form.register("slug")} />
+          <CardContent className="pt-6 space-y-6">
+            <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
+              <div className="flex flex-col items-center gap-4">
+                <Avatar className="w-32 h-32 border-4 border-muted shadow-lg">
+                  <AvatarImage src={form.watch("avatarUrl") || undefined} className="object-cover" />
+                  <AvatarFallback className="text-4xl bg-primary/5 text-primary">
+                    {form.watch("displayName")?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="relative">
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    id="avatar-upload"
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                  />
+                  <Label 
+                    htmlFor="avatar-upload" 
+                    className={`inline-flex items-center justify-center h-10 px-4 rounded-full bg-secondary text-secondary-foreground text-sm font-medium cursor-pointer hover-elevate transition-all ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    Upload Photo
+                  </Label>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="avatarUrl">Avatar URL</Label>
-              <Input id="avatarUrl" placeholder="https://..." {...form.register("avatarUrl")} />
-              <p className="text-xs text-muted-foreground">Link to your profile picture (square images work best)</p>
+              <div className="flex-1 space-y-4 w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Display Name</Label>
+                    <Input id="displayName" {...form.register("displayName")} />
+                    {form.formState.errors.displayName && <p className="text-red-500 text-xs">{form.formState.errors.displayName.message as string}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="slug">Profile URL Slug</Label>
+                    <div className="flex items-center">
+                      <span className="text-sm text-muted-foreground bg-gray-50 border border-r-0 rounded-l-xl px-3 py-[10px] h-11 border-input">
+                        /p/
+                      </span>
+                      <Input id="slug" className="rounded-l-none" {...form.register("slug")} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="avatarUrl">Avatar URL (Optional)</Label>
+                  <Input id="avatarUrl" placeholder="https://..." {...form.register("avatarUrl")} readOnly />
+                  <p className="text-xs text-muted-foreground">Upload your photo above or provide a direct link</p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
