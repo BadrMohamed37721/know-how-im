@@ -1,20 +1,35 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, index, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-export * from "./models/auth";
+// Combined schema to avoid conflicts between shared/schema.ts and shared/models/auth.ts
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)]
+);
 
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email"),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").unique(), // Keep this for profile logic
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   isAdmin: boolean("is_admin").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const profiles = pgTable("profiles", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
   displayName: text("display_name").notNull(),
   bio: text("bio"),
   slug: text("slug").notNull().unique(),
@@ -28,7 +43,7 @@ export const links = pgTable("links", {
   profileId: integer("profile_id").notNull().references(() => profiles.id),
   title: text("title").notNull(),
   url: text("url").notNull(),
-  icon: text("icon").notNull(), // e.g. "instagram", "linkedin", "globe"
+  icon: text("icon").notNull(),
   order: integer("order").notNull().default(0),
 });
 
@@ -56,3 +71,4 @@ export type Profile = typeof profiles.$inferSelect;
 export type Link = typeof links.$inferSelect;
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
 export type InsertLink = z.infer<typeof insertLinkSchema>;
+export type UpsertUser = typeof users.$inferInsert;

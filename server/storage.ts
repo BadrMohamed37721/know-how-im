@@ -7,16 +7,17 @@ import {
 import { eq, asc } from "drizzle-orm";
 
 export interface IStorage {
-  // User (Replit Auth)
-  getUser(id: number): Promise<User | undefined>;
+  // User (Replit Auth compatible)
+  getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: Partial<User>): Promise<User>;
+  upsertUser(user: any): Promise<User>;
 
   // Profile
   getProfile(id: number): Promise<Profile | undefined>;
-  getProfileByUserId(userId: number): Promise<Profile | undefined>;
+  getProfileByUserId(userId: string): Promise<Profile | undefined>;
   getProfileBySlug(slug: string): Promise<(Profile & { links: Link[] }) | undefined>;
-  createProfile(profile: InsertProfile & { userId: number }): Promise<Profile>;
+  createProfile(profile: InsertProfile & { userId: string }): Promise<Profile>;
   updateProfile(id: number, updates: Partial<InsertProfile>): Promise<Profile>;
 
   // Links
@@ -28,7 +29,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -38,8 +39,23 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(insertUser: Partial<User>): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser as any).returning();
+  async createUser(insertUser: any): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async upsertUser(userData: any): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
     return user;
   }
 
@@ -48,7 +64,7 @@ export class DatabaseStorage implements IStorage {
     return profile;
   }
 
-  async getProfileByUserId(userId: number): Promise<Profile | undefined> {
+  async getProfileByUserId(userId: string): Promise<Profile | undefined> {
     const [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId));
     return profile;
   }
@@ -66,7 +82,7 @@ export class DatabaseStorage implements IStorage {
     return { ...profile, links: profileLinks };
   }
 
-  async createProfile(profile: InsertProfile & { userId: number }): Promise<Profile> {
+  async createProfile(profile: InsertProfile & { userId: string }): Promise<Profile> {
     const [newProfile] = await db.insert(profiles).values(profile).returning();
     return newProfile;
   }
@@ -95,7 +111,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async reorderLinks(profileId: number, linkIds: number[]): Promise<Link[]> {
-    // Naive implementation: update each one. Transaction would be better.
     for (let i = 0; i < linkIds.length; i++) {
       await db.update(links)
         .set({ order: i })
