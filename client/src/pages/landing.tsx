@@ -1,11 +1,30 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Zap, Share2 } from "lucide-react";
+import { Smartphone, Zap, Share2, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
 
 export default function LandingPage() {
+  const { user, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (user && !isLoading) {
+      setLocation("/dashboard");
+    }
+  }, [user, isLoading, setLocation]);
+
   const handleLogin = () => {
     window.location.href = "/api/login";
   };
+
+  if (isLoading || user) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
