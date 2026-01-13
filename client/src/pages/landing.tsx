@@ -1,31 +1,8 @@
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Zap, Share2, Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
+import { Smartphone, Zap, Share2 } from "lucide-react";
 
 export default function LandingPage() {
-  const { user, isLoading } = useAuth();
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (user && !isLoading) {
-      setLocation("/dashboard");
-    }
-  }, [user, isLoading, setLocation]);
-
-  const handleLogin = () => {
-    window.location.href = "/api/login";
-  };
-
-  if (isLoading || user) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -38,7 +15,9 @@ export default function LandingPage() {
               </span>
             </div>
             <div>
-              <Button onClick={handleLogin}>Log In / Sign Up</Button>
+              <Link href="/dashboard">
+                <Button>Go to Dashboard</Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -57,20 +36,13 @@ export default function LandingPage() {
               The smart, digital business card for modern professionals.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/25 hover:-translate-y-1 transition-transform" onClick={handleLogin}>
-                Create Your Card
-              </Button>
-              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full">
-                See How It Works
-              </Button>
+              <Link href="/dashboard">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/25 hover:-translate-y-1 transition-transform">
+                  Create Your Card
+                </Button>
+              </Link>
             </div>
           </div>
-        </div>
-
-        {/* Abstract Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-30 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200 blur-3xl" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200 blur-3xl" />
         </div>
       </div>
 
