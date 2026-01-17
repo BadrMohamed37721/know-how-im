@@ -23,6 +23,20 @@ const ICONS: Record<string, any> = {
   default: ExternalLink,
 };
 
+const PLATFORM_LABELS: Record<string, string> = {
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
+  github: "GitHub",
+  twitter: "X",
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  facebook: "Facebook",
+  twitch: "Twitch",
+  whatsapp: "WhatsApp",
+  email: "Email",
+  default: "Link",
+};
+
 const COLORS: Record<string, string> = {
   instagram: "#E4405F",
   linkedin: "#0A66C2",
@@ -173,6 +187,7 @@ END:VCARD`;
               const platform = link.icon.toLowerCase();
               const Icon = ICONS[platform] || ICONS.default;
               const color = COLORS[platform] || COLORS.default;
+              const label = PLATFORM_LABELS[platform] || link.title || PLATFORM_LABELS.default;
               
               return (
                 <motion.a
@@ -194,7 +209,7 @@ END:VCARD`;
                     <Icon className="w-8 h-8" />
                   </div>
                   <span className="text-xs font-semibold text-gray-600 group-hover:text-black text-center truncate w-full">
-                    {link.title}
+                    {label}
                   </span>
                 </motion.a>
               );
