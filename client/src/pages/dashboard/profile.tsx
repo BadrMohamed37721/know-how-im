@@ -22,10 +22,11 @@ export default function ProfilePage() {
   const { uploadFile, isUploading } = useUpload();
 
   const form = useForm({
-    resolver: zodResolver(insertProfileSchema.omit({ id: true, userId: true }).partial() as any),
+    resolver: zodResolver(insertProfileSchema.partial() as any),
     defaultValues: {
       displayName: "",
       bio: "",
+      phoneNumber: "",
       slug: "",
       avatarUrl: "",
       themeColor: "#000000",
@@ -38,6 +39,7 @@ export default function ProfilePage() {
       form.reset({
         displayName: profile.displayName,
         bio: profile.bio || "",
+        phoneNumber: profile.phoneNumber || "",
         slug: profile.slug,
         avatarUrl: profile.avatarUrl || "",
         themeColor: profile.themeColor || "#000000",

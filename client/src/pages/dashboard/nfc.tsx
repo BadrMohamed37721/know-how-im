@@ -65,9 +65,13 @@ export default function NFCPage() {
       // @ts-ignore
       const ndef = new NDEFReader();
       
-      // Writing an empty record effectively clears it for most readers
+      // Starting a scan is required on some devices before writing/clearing
+      await ndef.scan();
+      
+      // Writing an empty text record with "makeReadOnly" false if supported
+      // or just a basic empty payload which most readers interpret as "empty"
       await ndef.write({
-        records: []
+        records: [{ recordType: "text", data: "" }]
       });
 
       toast({
