@@ -134,7 +134,7 @@ END:VCARD`;
             >
               {profile.avatarUrl ? (
                 <img 
-                  src={profile.avatarUrl.startsWith('/objects/') ? profile.avatarUrl : profile.avatarUrl} 
+                  src={profile.avatarUrl.startsWith('/objects/') ? `/api${profile.avatarUrl}` : profile.avatarUrl} 
                   alt={profile.displayName} 
                   className="w-full h-full object-cover" 
                 />
