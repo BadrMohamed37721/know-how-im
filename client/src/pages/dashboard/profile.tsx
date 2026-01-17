@@ -126,6 +126,11 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <Input id="phoneNumber" placeholder="+1234567890" {...form.register("phoneNumber")} />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="slug">Profile URL Slug</Label>
                     <div className="flex items-center">
                       <span className="text-sm text-muted-foreground bg-gray-50 border border-r-0 rounded-l-xl px-3 py-[10px] h-11 border-input">

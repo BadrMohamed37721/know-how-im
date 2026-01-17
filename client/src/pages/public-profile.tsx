@@ -1,8 +1,8 @@
 import { useParams } from "wouter";
 import { usePublicProfile } from "@/hooks/use-profile";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Share2, FileText } from "lucide-react";
-import { SiInstagram, SiLinkedin, SiGithub, SiX, SiYoutube, SiTiktok, SiFacebook, SiTwitch } from "react-icons/si";
+import { Loader2, Download, Share2, FileText, Phone } from "lucide-react";
+import { SiInstagram, SiLinkedin, SiGithub, SiX, SiYoutube, SiTiktok, SiFacebook, SiTwitch, SiWhatsapp, SiGmail } from "react-icons/si";
 import { ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
@@ -18,7 +18,23 @@ const ICONS: Record<string, any> = {
   tiktok: SiTiktok,
   facebook: SiFacebook,
   twitch: SiTwitch,
+  whatsapp: SiWhatsapp,
+  email: SiGmail,
   default: ExternalLink,
+};
+
+const COLORS: Record<string, string> = {
+  instagram: "#E4405F",
+  linkedin: "#0A66C2",
+  github: "#181717",
+  twitter: "#000000",
+  youtube: "#FF0000",
+  tiktok: "#000000",
+  facebook: "#1877F2",
+  twitch: "#9146FF",
+  whatsapp: "#25D366",
+  email: "#EA4335",
+  default: "#71717a",
 };
 
 export default function PublicProfile() {
@@ -75,6 +91,7 @@ export default function PublicProfile() {
     const vcard = `BEGIN:VCARD
 VERSION:3.0
 FN:${profile.displayName}
+TEL:${profile.phoneNumber || ""}
 NOTE:${profile.bio || ""}
 URL:${window.location.href}
 END:VCARD`;
@@ -139,33 +156,47 @@ END:VCARD`;
                   {profile.bio}
                 </p>
               )}
+              {profile.phoneNumber && (
+                <a 
+                  href={`tel:${profile.phoneNumber}`}
+                  className="mt-4 inline-flex items-center text-primary hover:underline font-medium"
+                >
+                  <Phone className="w-4 h-4 mr-2" />
+                  {profile.phoneNumber}
+                </a>
+              )}
             </motion.div>
           </div>
 
-          {/* Links List */}
-          <div className="mt-8 space-y-4">
+          {/* Links Grid */}
+          <div className="mt-8 grid grid-cols-3 gap-6">
             {links.map((link, index) => {
-              const Icon = ICONS[link.icon.toLowerCase()] || ICONS.default;
+              const platform = link.icon.toLowerCase();
+              const Icon = ICONS[platform] || ICONS.default;
+              const color = COLORS[platform] || COLORS.default;
+              
               return (
                 <motion.a
                   key={link.id}
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="block w-full p-4 rounded-xl bg-white shadow-md hover:shadow-lg transition-all border border-gray-100 flex items-center group"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3 + index * 0.05 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="flex flex-col items-center gap-2 group"
                 >
                   <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 mr-4 transition-colors"
-                    style={{ backgroundColor: profile.themeColor || "#000000" }}
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform"
+                    style={{ backgroundColor: color }}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-8 h-8" />
                   </div>
-                  <span className="font-medium text-gray-800 group-hover:text-black">{link.title}</span>
+                  <span className="text-xs font-semibold text-gray-600 group-hover:text-black text-center truncate w-full">
+                    {link.title}
+                  </span>
                 </motion.a>
               );
             })}

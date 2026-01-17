@@ -32,6 +32,7 @@ export const profiles = pgTable("profiles", {
   userId: varchar("user_id").notNull().references(() => users.id),
   displayName: text("display_name").notNull(),
   bio: text("bio"),
+  phoneNumber: text("phone_number"),
   slug: text("slug").notNull().unique(),
   avatarUrl: text("avatar_url"),
   themeColor: text("theme_color").default("#000000"),

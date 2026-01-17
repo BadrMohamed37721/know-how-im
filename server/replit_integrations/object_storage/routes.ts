@@ -45,9 +45,11 @@ export function registerObjectStorageRoutes(app: Express): void {
     }
   });
 
-  app.get("/objects/:objectPath(*)", async (req, res) => {
+  app.get("/api/objects/:objectPath(*)", async (req, res) => {
     try {
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      // Decode the object path because it might contain slashes or other encoded characters
+      const objectPath = decodeURIComponent(req.params.objectPath);
+      const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
       await objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error serving object:", error);
