@@ -28,21 +28,44 @@ export default function NFCPage() {
     try {
       // @ts-ignore
       const ndef = new NDEFReader();
+      
+      // Before writing, we scan to check for our authorization token
+      await ndef.scan();
+      
+      const isAuthorized = await new Promise((resolve) => {
+        const timeout = setTimeout(() => resolve(false), 3000);
+        ndef.onreading = (event: any) => {
+          clearTimeout(timeout);
+          const { message } = event;
+          const authRecord = message.records.find((r: any) => 
+            r.recordType === "text" && new TextDecoder().decode(r.data) === "KWIA_AUTH_TOKEN_2026"
+          );
+          resolve(!!authRecord);
+        };
+      });
+
+      if (!isAuthorized) {
+        throw new Error("This tag is not authorized. Please use an official tag.");
+      }
+
       const profileUrl = `${window.location.origin}/p/${profile.slug}`;
       
       await ndef.write({
-        records: [{ recordType: "url", data: profileUrl }]
+        records: [
+          { recordType: "url", data: profileUrl },
+          { recordType: "text", data: "KWIA_AUTH_TOKEN_2026" }
+        ]
       });
 
       toast({
         title: "Success",
         description: "Successfully wrote your profile URL to the NFC tag!",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         title: "Error",
-        description: "Failed to write to NFC tag. Make sure NFC is enabled and try again.",
+        description: error.message || "Failed to write to NFC tag. Make sure NFC is enabled and try again.",
         variant: "destructive",
       });
     } finally {
@@ -65,24 +88,37 @@ export default function NFCPage() {
       // @ts-ignore
       const ndef = new NDEFReader();
       
-      // Starting a scan is required on some devices before writing/clearing
       await ndef.scan();
       
-      // Writing an empty text record with "makeReadOnly" false if supported
-      // or just a basic empty payload which most readers interpret as "empty"
+      const isAuthorized = await new Promise((resolve) => {
+        const timeout = setTimeout(() => resolve(false), 3000);
+        ndef.onreading = (event: any) => {
+          clearTimeout(timeout);
+          const { message } = event;
+          const authRecord = message.records.find((r: any) => 
+            r.recordType === "text" && new TextDecoder().decode(r.data) === "KWIA_AUTH_TOKEN_2026"
+          );
+          resolve(!!authRecord);
+        };
+      });
+
+      if (!isAuthorized) {
+        throw new Error("This tag is not authorized for use with this app.");
+      }
+
       await ndef.write({
-        records: [{ recordType: "text", data: "" }]
+        records: [{ recordType: "text", data: "KWIA_AUTH_TOKEN_2026" }]
       });
 
       toast({
         title: "Success",
         description: "Successfully cleared the NFC tag!",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         title: "Error",
-        description: "Failed to clear NFC tag. Make sure NFC is enabled and try again.",
+        description: error.message || "Failed to clear NFC tag. Make sure NFC is enabled and try again.",
         variant: "destructive",
       });
     } finally {
