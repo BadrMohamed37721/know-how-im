@@ -20,6 +20,10 @@ const ICON_OPTIONS = [
   { value: "twitter", label: "Twitter" },
   { value: "youtube", label: "YouTube" },
   { value: "tiktok", label: "TikTok" },
+  { value: "facebook", label: "Facebook" },
+  { value: "twitch", label: "Twitch" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "email", label: "Email" },
 ];
 
 export default function LinksPage() {
