@@ -90,7 +90,10 @@ export default function ProfilePage() {
             <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
               <div className="flex flex-col items-center gap-4">
                 <Avatar className="w-32 h-32 border-4 border-muted shadow-lg">
-                  <AvatarImage src={form.watch("avatarUrl") || undefined} className="object-cover" />
+                  <AvatarImage 
+                    src={form.watch("avatarUrl") ? (form.watch("avatarUrl").startsWith('/objects/') ? `/api${form.watch("avatarUrl")}` : form.watch("avatarUrl")) : undefined} 
+                    className="object-cover" 
+                  />
                   <AvatarFallback className="text-4xl bg-primary/5 text-primary">
                     {form.watch("displayName")?.charAt(0) || "U"}
                   </AvatarFallback>
