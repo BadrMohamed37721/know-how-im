@@ -19,9 +19,8 @@ export async function registerRoutes(
 
   // Serve static files from object storage (alternative to the /api/objects route)
   // This helps if the frontend is trying to access /objects/ directly
-  app.use("/objects", (req, res, next) => {
-    req.url = `/api/objects${req.url}`;
-    next();
+  app.get("/objects/uploads/:filename", (req, res) => {
+    res.redirect(`/api/objects/uploads/${req.params.filename}`);
   });
 
   // === Public Routes ===

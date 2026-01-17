@@ -45,10 +45,10 @@ export function registerObjectStorageRoutes(app: Express): void {
     }
   });
 
-  app.get("/api/objects/:objectPath(*)", async (req, res) => {
+  app.get("/api/objects/uploads/:filename", async (req, res) => {
     try {
-      // Decode the object path because it might contain slashes or other encoded characters
-      const objectPath = decodeURIComponent(req.params.objectPath);
+      const filename = req.params.filename;
+      const objectPath = `.private/uploads/${filename}`;
       const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
       await objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
