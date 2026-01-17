@@ -134,13 +134,12 @@ END:VCARD`;
             >
               {profile.avatarUrl ? (
                 <img 
-                  src={profile.avatarUrl.startsWith('/objects/') ? `/api${profile.avatarUrl}` : profile.avatarUrl} 
+                  src={profile.avatarUrl.startsWith('/objects/') ? profile.avatarUrl : profile.avatarUrl} 
                   alt={profile.displayName} 
                   className="w-full h-full object-cover" 
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-400">
-                  {profile.displayName.charAt(0)}
                 </div>
               )}
             </motion.div>

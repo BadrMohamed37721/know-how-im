@@ -17,6 +17,13 @@ export async function registerRoutes(
   // Set up Object Storage
   registerObjectStorageRoutes(app);
 
+  // Serve static files from object storage (alternative to the /api/objects route)
+  // This helps if the frontend is trying to access /objects/ directly
+  app.use("/objects", (req, res, next) => {
+    req.url = `/api/objects${req.url}`;
+    next();
+  });
+
   // === Public Routes ===
   app.get(api.profiles.getBySlug.path, async (req, res) => {
     const profile = await storage.getProfileBySlug(req.params.slug);
