@@ -38,7 +38,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 const COLORS: Record<string, string> = {
-  instagram: "#E4405F",
+  instagram: "linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)",
   linkedin: "#0A66C2",
   github: "#181717",
   twitter: "#000000",
@@ -204,7 +204,7 @@ END:VCARD`;
                 >
                   <div 
                     className="w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform"
-                    style={{ backgroundColor: color }}
+                    style={{ background: color.startsWith('linear') ? color : undefined, backgroundColor: color.startsWith('linear') ? undefined : color }}
                   >
                     <Icon className="w-8 h-8" />
                   </div>
@@ -247,12 +247,15 @@ END:VCARD`;
           </Button>
         </div>
         
-        {/* Footer Brand */}
-        <div className="pt-8 text-center">
-          <a href="/" className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest">
-            LinkTap
-          </a>
-        </div>
+          {/* Footer Brand */}
+          <div className="pt-8 text-center space-y-2">
+            <a href="/" className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest">
+              Know Who I Am
+            </a>
+            <p className="text-[10px] text-gray-400 uppercase tracking-tighter">
+              Credits for Badr
+            </p>
+          </div>
       </div>
     </div>
   );

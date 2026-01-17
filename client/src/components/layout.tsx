@@ -17,7 +17,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile Header */}
       <div className="md:hidden bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10">
         <h1 className="text-xl font-bold font-display bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-          LinkTap
+          Know Who I Am
         </h1>
         <button
           onClick={() => window.location.href = "/api/logout"}
@@ -34,7 +34,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       ">
         <div className="hidden md:block mb-8">
           <h1 className="text-2xl font-bold font-display bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            LinkTap
+            Know Who I Am
           </h1>
         </div>
 
