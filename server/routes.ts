@@ -127,6 +127,12 @@ export async function registerRoutes(
     next();
   };
 
+  app.get("/api/nfc/my-tag", requireAuth, async (req, res) => {
+    const userId = (req.user as any).claims.sub;
+    const tag = await (storage as any).getTagByUserId(userId);
+    res.json(tag || null);
+  });
+
   app.get("/api/admin/tags", requireAdmin, async (req, res) => {
     const tags = await storage.getAllTags();
     res.json(tags);
@@ -158,6 +164,17 @@ export async function registerRoutes(
     const success = await (storage as any).claimTag(tagId, userId);
     if (!success) return res.status(400).json({ message: "Could not claim tag. It might be invalid or already claimed." });
     res.json({ message: "Tag claimed successfully" });
+  });
+
+  app.post("/api/admin/unclaim-tag", requireAdmin, async (req, res) => {
+    const { tagId } = req.body;
+    if (!tagId) return res.status(400).json({ message: "Tag ID is required" });
+    
+    await db.update(nfcInventory)
+      .set({ claimedBy: null })
+      .where(eq(nfcInventory.tagId, tagId));
+    
+    res.json({ message: "Tag unclaimed successfully" });
   });
 
   return httpServer;

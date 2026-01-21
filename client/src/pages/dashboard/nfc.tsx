@@ -14,7 +14,22 @@ export default function NFCPage() {
   const [isClearing, setIsClearing] = useState(false);
   const [checkingId, setCheckingId] = useState("");
   const [verificationState, setVerificationState] = useState<{isVerified: boolean, isClaimed: boolean, isYours: boolean} | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
+  const { data: myTag, isLoading: isLoadingTag } = useQuery<any>({
+    queryKey: ["/api/nfc/my-tag"],
+  });
+
+  useEffect(() => {
+    if (myTag) {
+      setCheckingId(myTag.tagId);
+      setVerificationState({
+        isVerified: true,
+        isClaimed: true,
+        isYours: true
+      });
+    }
+  }, [myTag]);
+
+  if (isLoadingTag) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin" /></div>;
 
   const checkNFC = async () => {
     if (!checkingId) return;

@@ -15,6 +15,22 @@ export default function AdminPage() {
     queryKey: ["/api/admin/tags"],
   });
 
+  const unclaimMutation = useMutation({
+    mutationFn: async (tagId: string) => {
+      const res = await fetch("/api/admin/unclaim-tag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tagId }),
+      });
+      if (!res.ok) throw new Error("Failed to unclaim tag");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tags"] });
+      toast({ title: "Success", description: "Tag unclaimed successfully" });
+    },
+  });
+
   const verifyMutation = useMutation({
     mutationFn: async (tagId: string) => {
       const res = await fetch("/api/admin/verify-tag", {
@@ -89,10 +105,22 @@ export default function AdminPage() {
                     Verified on {new Date(tag.verifiedAt).toLocaleDateString()} by {tag.verifiedBy}
                   </p>
                 </div>
-                <div className="flex items-center gap-1 text-green-600 font-semibold">
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Ready for Sale</span>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-green-600 font-semibold">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Ready for Sale</span>
+                    </div>
+                    {tag.claimedBy && (
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={() => unclaimMutation.mutate(tag.tagId)}
+                        disabled={unclaimMutation.isPending}
+                      >
+                        {unclaimMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Unlink Tag"}
+                      </Button>
+                    )}
+                  </div>
               </CardHeader>
             </Card>
           ))}
