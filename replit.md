@@ -1,7 +1,7 @@
-# Digital Business Card App
+# Know Who I Am
 
 ## Overview
-A mobile-first digital business card application that allows users to create a profile, manage social links, and write their profile URL to an NFC tag.
+An NFC-based digital business card application where users can link their profiles to physical NFC tags.
 
 ## Features
 - **Public Profile**: `/p/:slug` - The digital card view.

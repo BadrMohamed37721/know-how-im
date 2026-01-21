@@ -34,7 +34,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <span className="text-2xl font-bold font-display bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                LinkTap
+                Know Who I Am
               </span>
             </div>
             <div>
