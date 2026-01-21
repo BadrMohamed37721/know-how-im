@@ -75,25 +75,10 @@ export default function PublicProfile() {
     );
   }
 
-  // NFC Activation Check
-  if (!(profile as any).isActivated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50 p-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl text-center space-y-4 border-2 border-red-100">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-4xl">🚫</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">NFC Not Activated</h1>
-          <p className="text-red-600 font-medium">That's not our NFC or it hasn't been scanned yet.</p>
-          <p className="text-gray-500 text-sm">Please contact the seller if you believe this is an error.</p>
-          <div className="pt-4">
-             <a href="/" className="text-sm font-bold text-primary hover:underline">Return Home</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Placeholder for NFC check - in a real scenario, this would check the physical tag ID
+  // For now, we'll keep the profile accessible once created, but you can use the inventory 
+  // to pre-verify IDs.
+  
   const links = [...(profile.links || [])].sort((a, b) => a.order - b.order);
 
   const handleDownloadPDF = async () => {

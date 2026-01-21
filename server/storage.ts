@@ -1,6 +1,6 @@
 import { db } from "./db";
 import {
-  users, profiles, links,
+  users, profiles, links, nfcInventory,
   type User, type Profile, type Link,
   type InsertProfile, type InsertLink
 } from "@shared/schema";
@@ -16,7 +16,7 @@ export interface IStorage {
   // Profile
   getProfile(id: number): Promise<Profile | undefined>;
   getProfileByUserId(userId: string): Promise<Profile | undefined>;
-  getProfileBySlug(slug: string): Promise<(Profile & { links: Link[]; isActivated: boolean }) | undefined>;
+  getProfileBySlug(slug: string): Promise<(Profile & { links: Link[] }) | undefined>;
   createProfile(profile: InsertProfile & { userId: string }): Promise<Profile>;
   updateProfile(id: number, updates: Partial<InsertProfile>): Promise<Profile>;
 
@@ -26,6 +26,11 @@ export interface IStorage {
   updateLink(id: number, updates: Partial<InsertLink>): Promise<Link>;
   deleteLink(id: number): Promise<void>;
   reorderLinks(profileId: number, linkIds: number[]): Promise<Link[]>;
+
+  // NFC Inventory
+  verifyTag(tagId: string, adminEmail: string): Promise<any>;
+  isTagVerified(tagId: string): Promise<boolean>;
+  getAllTags(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -69,11 +74,9 @@ export class DatabaseStorage implements IStorage {
     return profile;
   }
 
-  async getProfileBySlug(slug: string): Promise<(Profile & { links: Link[]; isActivated: boolean }) | undefined> {
+  async getProfileBySlug(slug: string): Promise<(Profile & { links: Link[] }) | undefined> {
     const [profile] = await db.select().from(profiles).where(eq(profiles.slug, slug));
     if (!profile) return undefined;
-
-    const [user] = await db.select().from(users).where(eq(users.id, profile.userId));
     
     const profileLinks = await db
       .select()
@@ -81,7 +84,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(links.profileId, profile.id))
       .orderBy(asc(links.order));
       
-    return { ...profile, links: profileLinks, isActivated: !!user?.isActivated };
+    return { ...profile, links: profileLinks };
   }
 
   async createProfile(profile: InsertProfile & { userId: string }): Promise<Profile> {
@@ -120,22 +123,35 @@ export class DatabaseStorage implements IStorage {
     }
     return this.getLinks(profileId);
   }
-  async activateUser(id: string, adminEmail: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({
-        isActivated: true,
-        activationDate: new Date(),
-        activatedBy: adminEmail,
-        updatedAt: new Date(),
+  // NFC Inventory
+  async verifyTag(tagId: string, adminEmail: string): Promise<any> {
+    const [tag] = await db
+      .insert(nfcInventory)
+      .values({
+        tagId,
+        isVerified: true,
+        verifiedAt: new Date(),
+        verifiedBy: adminEmail,
       })
-      .where(eq(users.id, id))
+      .onConflictDoUpdate({
+        target: nfcInventory.tagId,
+        set: {
+          isVerified: true,
+          verifiedAt: new Date(),
+          verifiedBy: adminEmail,
+        },
+      })
       .returning();
-    return user;
+    return tag;
   }
 
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(asc(users.createdAt));
+  async isTagVerified(tagId: string): Promise<boolean> {
+    const [tag] = await db.select().from(nfcInventory).where(eq(nfcInventory.tagId, tagId));
+    return !!tag?.isVerified;
+  }
+
+  async getAllTags(): Promise<any[]> {
+    return await db.select().from(nfcInventory).orderBy(asc(nfcInventory.createdAt));
   }
 }
 

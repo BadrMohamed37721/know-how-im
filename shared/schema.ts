@@ -25,11 +25,17 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false),
   qrToken: text("qr_token"),
   qrExpiresAt: timestamp("qr_expires_at"),
-  isActivated: boolean("is_activated").default(false), // New field for NFC activation
-  activationDate: timestamp("activation_date"),
-  activatedBy: varchar("activated_by"), // email of the admin who activated
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const nfcInventory = pgTable("nfc_inventory", {
+  id: serial("id").primaryKey(),
+  tagId: text("tag_id").notNull().unique(), // The unique ID of the physical NFC tag
+  isVerified: boolean("is_verified").default(false), // Verified by admin
+  verifiedAt: timestamp("verified_at"),
+  verifiedBy: varchar("verified_by"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const profiles = pgTable("profiles", {

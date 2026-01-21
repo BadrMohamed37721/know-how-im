@@ -127,15 +127,22 @@ export async function registerRoutes(
     next();
   };
 
-  app.get("/api/admin/users", requireAdmin, async (req, res) => {
-    const allUsers = await storage.getAllUsers();
-    res.json(allUsers);
+  app.get("/api/admin/tags", requireAdmin, async (req, res) => {
+    const tags = await storage.getAllTags();
+    res.json(tags);
   });
 
-  app.post("/api/admin/activate/:id", requireAdmin, async (req, res) => {
+  app.post("/api/admin/verify-tag", requireAdmin, async (req, res) => {
     const admin = req.user as any;
-    const user = await storage.activateUser(req.params.id, admin.claims.email);
-    res.json(user);
+    const { tagId } = req.body;
+    if (!tagId) return res.status(400).json({ message: "Tag ID is required" });
+    const tag = await storage.verifyTag(tagId, admin.claims.email);
+    res.json(tag);
+  });
+
+  app.get("/api/nfc/check/:tagId", async (req, res) => {
+    const isVerified = await storage.isTagVerified(req.params.tagId);
+    res.json({ isVerified });
   });
 
   return httpServer;
