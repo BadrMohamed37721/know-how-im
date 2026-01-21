@@ -8,7 +8,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { user } = useAuth();
 
-  const isAdmin = (user as any)?.claims?.email === "badrdiab2020@gmail.com" || (user as any)?.claims?.is_admin;
+  const isAdmin = user?.email === "badrdiab2020@gmail.com" || (user as any)?.isAdmin;
 
   const tabs = [
     { name: "Profile", path: "/dashboard", icon: User },
