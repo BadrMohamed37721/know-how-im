@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { useMyProfile } from "@/hooks/use-profile";
 import { Input } from "@/components/ui/input";
 
 export default function NFCPage() {
+  const queryClient = useQueryClient();
   const { data: profile } = useMyProfile();
   const { toast } = useToast();
   const [isWriting, setIsWriting] = useState(false);
@@ -62,7 +63,10 @@ export default function NFCPage() {
         body: JSON.stringify({ tagId: checkingId }),
       });
       if (!res.ok) throw new Error("Failed to claim tag");
-      setVerificationState(prev => prev ? {...prev, isClaimed: true, isYours: true} : null);
+      
+      // Invalidate queries to update UI without refresh
+      queryClient.invalidateQueries({ queryKey: ["/api/nfc/my-tag"] });
+      
       toast({ title: "Success", description: "Tag linked to your account!" });
     } catch (err) {
       toast({ title: "Error", description: "Failed to link tag", variant: "destructive" });
