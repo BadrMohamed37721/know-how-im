@@ -17,3 +17,4 @@ An NFC-based digital business card application where users can link their profil
 ## Setup
 - Database schema pushed via `npm run db:push`.
 - Frontend generated via `generate_frontend`.
+- Cloudflare Pages Build output directory: `client/src`.
