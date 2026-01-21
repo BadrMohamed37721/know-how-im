@@ -102,31 +102,18 @@ export default function NFCPage() {
       // @ts-ignore
       const ndef = new NDEFReader();
       
-      // We use scan() as a way to "wait" for the tag to be present
-      // and keep the loading state active for the user
-      await ndef.scan();
-      
-      const clearPromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error("Timeout: Please hold the tag closer")), 5000);
-        ndef.onreading = async () => {
-          clearTimeout(timeout);
-          try {
-            await ndef.write({ records: [] });
-            resolve(true);
-          } catch (e) {
-            reject(e);
-          }
-        };
+      // Direct write with simple records often works better than scan+write event loop
+      // which can cause "Operation Not Supported" or "Failed to execute 'write'"
+      await ndef.write({ 
+        records: [{ recordType: "text", data: "" }] 
       });
-
-      await clearPromise;
       
       toast({ title: "Success", description: "Tag cleared successfully!" });
     } catch (error: any) {
       console.error("NFC Clear Error:", error);
       toast({ 
         title: "Error", 
-        description: error.message || "Failed to clear tag. Make sure the card is touching your phone.", 
+        description: "Failed to clear tag. Make sure the card is touching your phone firmly.", 
         variant: "destructive" 
       });
     } finally {
