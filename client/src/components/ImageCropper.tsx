@@ -1,9 +1,30 @@
 import { useState } from "react";
 import ReactImageCrop, { Crop } from "react-image-crop";
-import "react-image-crop/dist/styles.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+
+// CSS for react-image-crop
+const cropStyles = `
+  .ReactImageCrop {
+    display: inline-block;
+    position: relative;
+  }
+  .ReactImageCrop__image {
+    display: block;
+    max-width: 100%;
+  }
+  .ReactImageCrop__crop-selection {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 0 0 9999em rgba(0, 0, 0, 0.3);
+  }
+`;
 
 interface ImageCropperProps {
   imageSrc: string;
@@ -70,26 +91,28 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Crop & Scale Photo</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="border rounded-lg overflow-hidden bg-muted">
-          <ReactImageCrop
-            crop={crop}
-            onChange={(c) => setCrop(c)}
-            aspect={1}
-            circularCrop
-          >
-            <img 
-              src={imageSrc} 
-              style={{ transform: `scale(${scale})`, transformOrigin: "center" }}
-              className="w-full"
-              alt="Crop preview"
-            />
-          </ReactImageCrop>
-        </div>
+    <>
+      <style>{cropStyles}</style>
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Crop & Scale Photo</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="border rounded-lg overflow-hidden bg-muted">
+            <ReactImageCrop
+              crop={crop}
+              onChange={(c) => setCrop(c)}
+              aspect={1}
+              circularCrop
+            >
+              <img 
+                src={imageSrc} 
+                style={{ transform: `scale(${scale})`, transformOrigin: "center" }}
+                className="w-full"
+                alt="Crop preview"
+              />
+            </ReactImageCrop>
+          </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Scale: {Math.round(scale * 100)}%</label>
@@ -107,16 +130,17 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
           </p>
         </div>
 
-        <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={onCancel} disabled={isProcessing}>
-            Cancel
-          </Button>
-          <Button onClick={handleCropImage} disabled={isProcessing}>
-            {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : ""}
-            Apply Crop
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={onCancel} disabled={isProcessing}>
+              Cancel
+            </Button>
+            <Button onClick={handleCropImage} disabled={isProcessing}>
+              {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : ""}
+              Apply Crop
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }
