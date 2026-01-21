@@ -1,16 +1,24 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { User, Layers, Radio } from "lucide-react";
+import { User, Layers, Radio, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
+  const { user } = useAuth();
+
+  const isAdmin = (user as any)?.claims?.email === "badrdiab2020@gmail.com" || (user as any)?.claims?.is_admin;
 
   const tabs = [
     { name: "Profile", path: "/dashboard", icon: User },
     { name: "Links", path: "/dashboard/links", icon: Layers },
     { name: "NFC", path: "/dashboard/nfc", icon: Radio },
   ];
+
+  if (isAdmin) {
+    tabs.push({ name: "Admin", path: "/dashboard/admin", icon: ShieldCheck });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row max-w-7xl mx-auto">
