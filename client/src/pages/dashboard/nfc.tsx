@@ -101,10 +101,20 @@ export default function NFCPage() {
     try {
       // @ts-ignore
       const ndef = new NDEFReader();
+      // Scan first to "wake up" the connection and ensure tag is present
+      await ndef.scan();
+      
+      // Using an empty message to clear NDEF data
       await ndef.write({ records: [] });
+      
       toast({ title: "Success", description: "Tag cleared successfully!" });
     } catch (error: any) {
-      toast({ title: "Error", description: "Failed to clear tag.", variant: "destructive" });
+      console.error("NFC Clear Error:", error);
+      toast({ 
+        title: "Error", 
+        description: error.name === 'NotAllowedError' ? "Permission denied" : "Failed to clear tag. Try holding it closer.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsClearing(false);
     }
