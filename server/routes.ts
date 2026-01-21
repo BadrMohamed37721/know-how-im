@@ -8,12 +8,12 @@ import { z } from "zod";
 
 export async function registerRoutes(
   httpServer: Server,
-  app: Express
+  app: Express,
 ): Promise<Server> {
   // Set up Replit Auth
   await setupAuth(app);
   registerAuthRoutes(app);
-  
+
   // Set up Object Storage
   registerObjectStorageRoutes(app);
 
@@ -43,12 +43,12 @@ export async function registerRoutes(
   app.get(api.profiles.me.path, requireAuth, async (req, res) => {
     const user = req.user as any;
     const userId = user.claims.sub;
-    
+
     let profile = await storage.getProfileByUserId(userId);
     if (!profile) {
       const email = user.claims.email || "";
       const suggestedSlug = email ? email.split("@")[0] : userId.slice(0, 8);
-      
+
       profile = await storage.createProfile({
         userId: userId,
         displayName: user.claims.first_name || suggestedSlug,
@@ -105,7 +105,7 @@ export async function registerRoutes(
     const userId = (req.user as any).claims.sub;
     const profile = await storage.getProfileByUserId(userId);
     if (!profile) return res.status(404).json({ message: "Profile not found" });
-    
+
     const { linkIds } = req.body;
     const links = await storage.reorderLinks(profile.id, linkIds);
     res.json(links);
@@ -118,7 +118,10 @@ export async function registerRoutes(
     }
     const user = req.user as any;
     // Specific check for your Gmail
-    if (user.claims.email !== "your-gmail@gmail.com" && !user.claims.is_admin) {
+    if (
+      user.claims.email !== "badrdiab2020@gmail.com" &&
+      !user.claims.is_admin
+    ) {
       return res.status(403).json({ message: "Forbidden: Admin access only" });
     }
     next();
