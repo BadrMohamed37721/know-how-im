@@ -30,6 +30,9 @@ export interface IStorage {
   // NFC Inventory
   verifyTag(tagId: string, adminEmail: string): Promise<any>;
   isTagVerified(tagId: string): Promise<boolean>;
+  claimTag(tagId: string, userId: string): Promise<boolean>;
+  getTagByUserId(userId: string): Promise<any>;
+  getTagByTagId(tagId: string): Promise<any>;
   getAllTags(): Promise<any[]>;
 }
 
@@ -148,6 +151,27 @@ export class DatabaseStorage implements IStorage {
   async isTagVerified(tagId: string): Promise<boolean> {
     const [tag] = await db.select().from(nfcInventory).where(eq(nfcInventory.tagId, tagId));
     return !!tag?.isVerified;
+  }
+
+  async getTagByTagId(tagId: string): Promise<any> {
+    const [tag] = await db.select().from(nfcInventory).where(eq(nfcInventory.tagId, tagId));
+    return tag;
+  }
+
+  async claimTag(tagId: string, userId: string): Promise<boolean> {
+    const [tag] = await db.select().from(nfcInventory).where(eq(nfcInventory.tagId, tagId));
+    if (!tag || !tag.isVerified) return false;
+    if (tag.claimedBy && tag.claimedBy !== userId) return false;
+    
+    await db.update(nfcInventory)
+      .set({ claimedBy: userId })
+      .where(eq(nfcInventory.tagId, tagId));
+    return true;
+  }
+
+  async getTagByUserId(userId: string): Promise<any> {
+    const [tag] = await db.select().from(nfcInventory).where(eq(nfcInventory.claimedBy, userId));
+    return tag;
   }
 
   async getAllTags(): Promise<any[]> {

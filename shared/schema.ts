@@ -33,6 +33,7 @@ export const nfcInventory = pgTable("nfc_inventory", {
   id: serial("id").primaryKey(),
   tagId: text("tag_id").notNull().unique(), // The unique ID of the physical NFC tag
   isVerified: boolean("is_verified").default(false), // Verified by admin
+  claimedBy: varchar("claimed_by").references(() => users.id), // The user who claimed this tag
   verifiedAt: timestamp("verified_at"),
   verifiedBy: varchar("verified_by"),
   createdAt: timestamp("created_at").defaultNow(),

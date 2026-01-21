@@ -141,8 +141,23 @@ export async function registerRoutes(
   });
 
   app.get("/api/nfc/check/:tagId", async (req, res) => {
-    const isVerified = await storage.isTagVerified(req.params.tagId);
-    res.json({ isVerified });
+    const tag = await storage.isTagVerified(req.params.tagId);
+    if (!tag) return res.json({ isVerified: false, isClaimed: false });
+    
+    const inventoryTag = await (storage as any).getTagByTagId(req.params.tagId);
+    res.json({ 
+      isVerified: true, 
+      isClaimed: !!inventoryTag.claimedBy,
+      isYours: req.isAuthenticated() && inventoryTag.claimedBy === (req.user as any).claims.sub
+    });
+  });
+
+  app.post("/api/nfc/claim", requireAuth, async (req, res) => {
+    const userId = (req.user as any).claims.sub;
+    const { tagId } = req.body;
+    const success = await (storage as any).claimTag(tagId, userId);
+    if (!success) return res.status(400).json({ message: "Could not claim tag. It might be invalid or already claimed." });
+    res.json({ message: "Tag claimed successfully" });
   });
 
   return httpServer;
