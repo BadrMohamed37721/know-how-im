@@ -111,5 +111,29 @@ export async function registerRoutes(
     res.json(links);
   });
 
+  // === Admin Routes ===
+  const requireAdmin = (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = req.user as any;
+    // Specific check for your Gmail
+    if (user.claims.email !== "your-gmail@gmail.com" && !user.claims.is_admin) {
+      return res.status(403).json({ message: "Forbidden: Admin access only" });
+    }
+    next();
+  };
+
+  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+    const allUsers = await storage.getAllUsers();
+    res.json(allUsers);
+  });
+
+  app.post("/api/admin/activate/:id", requireAdmin, async (req, res) => {
+    const admin = req.user as any;
+    const user = await storage.activateUser(req.params.id, admin.claims.email);
+    res.json(user);
+  });
+
   return httpServer;
 }

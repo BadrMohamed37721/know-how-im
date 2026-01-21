@@ -11,6 +11,7 @@ import PublicProfile from "@/pages/public-profile";
 import ProfilePage from "@/pages/dashboard/profile";
 import LinksPage from "@/pages/dashboard/links";
 import NFCPage from "@/pages/dashboard/nfc";
+import AdminPage from "@/pages/dashboard/admin";
 import NotFound from "@/pages/not-found";
 
 // Protected Route Wrapper
@@ -46,6 +47,9 @@ function Router() {
       </Route>
       <Route path="/dashboard/nfc">
         {() => <ProtectedRoute component={NFCPage} />}
+      </Route>
+      <Route path="/dashboard/admin">
+        {() => <ProtectedRoute component={AdminPage} />}
       </Route>
 
       {/* Fallback */}

@@ -25,6 +25,9 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false),
   qrToken: text("qr_token"),
   qrExpiresAt: timestamp("qr_expires_at"),
+  isActivated: boolean("is_activated").default(false), // New field for NFC activation
+  activationDate: timestamp("activation_date"),
+  activatedBy: varchar("activated_by"), // email of the admin who activated
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

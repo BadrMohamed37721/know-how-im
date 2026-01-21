@@ -118,6 +118,23 @@ export class DatabaseStorage implements IStorage {
     }
     return this.getLinks(profileId);
   }
+  async activateUser(id: string, adminEmail: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isActivated: true,
+        activationDate: new Date(),
+        activatedBy: adminEmail,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(asc(users.createdAt));
+  }
 }
 
 export const storage = new DatabaseStorage();
