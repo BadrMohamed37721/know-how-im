@@ -8,6 +8,7 @@ import { z } from "zod";
 import { db } from "./db";
 import { nfcInventory } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { randomBytes } from "crypto";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -129,6 +130,43 @@ export async function registerRoutes(
     }
     next();
   };
+
+  // QR Code Generation
+  app.post("/api/profiles/qr/generate", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims.sub;
+      const token = randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+      await storage.updateUserQR(userId, token, expiresAt);
+      
+      res.json({ token, expiresAt });
+    } catch (error) {
+      console.error("QR Generate Error:", error);
+      res.status(500).json({ error: "Failed to generate QR token" });
+    }
+  });
+
+  // QR Code Verification/Redirect
+  app.get("/qr/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const user = await storage.getUserByQRToken(token);
+
+      if (!user || !user.qrExpiresAt || user.qrExpiresAt < new Date()) {
+        return res.status(410).send("QR code expired or invalid. Please ask for a new one.");
+      }
+
+      const profile = await storage.getProfileByUserId(user.id);
+      if (!profile) return res.status(404).send("Profile not found");
+
+      res.redirect(`/p/${profile.slug}`);
+    } catch (error) {
+      console.error("QR Redirect Error:", error);
+      res.status(500).send("Server error");
+    }
+  });
 
   app.get("/api/nfc/my-tag", requireAuth, async (req, res) => {
     const userId = (req.user as any).claims.sub;

@@ -34,9 +34,24 @@ export interface IStorage {
   getTagByUserId(userId: string): Promise<any>;
   getTagByTagId(tagId: string): Promise<any>;
   getAllTags(): Promise<any[]>;
+  updateUserQR(id: string, token: string | null, expiresAt: Date | null): Promise<User>;
+  getUserByQRToken(token: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
+  async updateUserQR(id: string, token: string | null, expiresAt: Date | null): Promise<User> {
+    const [user] = await db.update(users)
+      .set({ qrToken: token, qrExpiresAt: expiresAt })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async getUserByQRToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.qrToken, token));
+    return user;
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;

@@ -1,13 +1,15 @@
 import { useParams } from "wouter";
 import { usePublicProfile } from "@/hooks/use-profile";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Share2, FileText, Phone } from "lucide-react";
+import { Loader2, Download, Share2, FileText, Phone, QrCode } from "lucide-react";
 import { SiInstagram, SiLinkedin, SiGithub, SiX, SiYoutube, SiTiktok, SiFacebook, SiTwitch, SiWhatsapp, SiGmail } from "react-icons/si";
 import { ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { QRCodeSVG } from "qrcode.react";
 
 const ICONS: Record<string, any> = {
   instagram: SiInstagram,
@@ -55,6 +57,42 @@ export default function PublicProfile() {
   const { slug } = useParams();
   const { data: profile, isLoading } = usePublicProfile(slug || "");
   const profileRef = useRef<HTMLDivElement>(null);
+  const [showQR, setShowQR] = useState(false);
+  const [qrData, setQrData] = useState<{ token: string, expiresAt: string } | null>(null);
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (qrData && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && qrData) {
+      setQrData(null);
+    }
+    return () => clearInterval(timer);
+  }, [qrData, timeLeft]);
+
+  const generateQR = async () => {
+    setIsGeneratingQR(true);
+    try {
+      const res = await fetch("/api/profiles/qr/generate", { method: "POST" });
+      if (res.status === 401) {
+        alert("Please log in to pick your sharing QR code.");
+        return;
+      }
+      const data = await res.json();
+      setQrData(data);
+      const expiry = new Date(data.expiresAt).getTime();
+      setTimeLeft(Math.floor((expiry - Date.now()) / 1000));
+      setShowQR(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGeneratingQR(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -240,6 +278,15 @@ END:VCARD`;
               <FileText className="w-4 h-4 mr-2" />
               PDF
             </Button>
+            <Button 
+              variant="secondary"
+              onClick={generateQR}
+              disabled={isGeneratingQR}
+              className="flex-1 rounded-full shadow-md bg-white hover:bg-gray-50 text-gray-900 border border-gray-200"
+            >
+              {isGeneratingQR ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4 mr-2" />}
+              QR
+            </Button>
           </div>
           <Button 
             variant="ghost"
@@ -250,6 +297,43 @@ END:VCARD`;
             Share Profile
           </Button>
         </div>
+
+        <Dialog open={showQR} onOpenChange={setShowQR}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center">Scan to Connect</DialogTitle>
+              <DialogDescription className="text-center">
+                {timeLeft > 0 
+                  ? `This QR code will expire in ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`
+                  : "QR Code expired. Please generate a new one."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center p-6 space-y-4">
+              {qrData && timeLeft > 0 ? (
+                <div className="p-4 bg-white rounded-2xl shadow-inner border">
+                  <QRCodeSVG 
+                    value={`${window.location.origin}/qr/${qrData.token}`}
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+              ) : (
+                <div className="w-[232px] h-[232px] flex flex-col items-center justify-center bg-gray-100 rounded-2xl border border-dashed">
+                  <QrCode className="w-12 h-12 text-gray-300 mb-2" />
+                  <p className="text-sm text-gray-400">Expired</p>
+                  <Button variant="link" onClick={generateQR} className="mt-2">Generate New</Button>
+                </div>
+              )}
+              <p className="text-sm text-center text-muted-foreground">
+                Anyone who scans this will be taken directly to your profile.
+              </p>
+              <Button onClick={() => setShowQR(false)} className="w-full rounded-full">
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         
           {/* Footer Brand */}
           <div className="pt-8 text-center space-y-2">
