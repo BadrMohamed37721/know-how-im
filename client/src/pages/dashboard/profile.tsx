@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProfileSchema } from "@shared/schema";
@@ -14,12 +14,14 @@ import { Loader2, Save, ExternalLink, Upload } from "lucide-react";
 import { Link } from "wouter";
 import { useUpload } from "@/hooks/use-upload";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ImageCropper } from "@/components/ImageCropper";
 
 export default function ProfilePage() {
   const { data: profile, isLoading } = useMyProfile();
   const updateProfile = useUpdateProfile();
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
+  const [croppingImage, setCroppingImage] = useState<string | null>(null);
 
   const form = useForm({
     resolver: zodResolver(insertProfileSchema.partial() as any),
@@ -51,11 +53,20 @@ export default function ProfilePage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const response = await uploadFile(file);
-      if (response) {
-        form.setValue("avatarUrl", response.objectPath);
-        toast({ title: "Success", description: "Image uploaded successfully. Don't forget to save changes!" });
-      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCroppingImage(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    const response = await uploadFile(croppedFile);
+    if (response) {
+      form.setValue("avatarUrl", response.objectPath);
+      setCroppingImage(null);
+      toast({ title: "Success", description: "Image uploaded successfully. Don't forget to save changes!" });
     }
   };
 
@@ -69,6 +80,22 @@ export default function ProfilePage() {
   };
 
   if (isLoading) return <div className="flex items-center justify-center h-screen"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+
+  if (croppingImage) {
+    return (
+      <DashboardLayout>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold font-display">Adjust Photo</h2>
+          <p className="text-muted-foreground">Scale and crop your photo before uploading</p>
+        </div>
+        <ImageCropper 
+          imageSrc={croppingImage} 
+          onCropComplete={handleCropComplete}
+          onCancel={() => setCroppingImage(null)}
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
