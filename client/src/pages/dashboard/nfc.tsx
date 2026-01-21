@@ -101,10 +101,9 @@ export default function NFCPage() {
     try {
       // @ts-ignore
       const ndef = new NDEFReader();
-      // Scan first to "wake up" the connection and ensure tag is present
-      await ndef.scan();
       
-      // Using an empty message to clear NDEF data
+      // Directly try to write empty records. 
+      // Sometimes scan() followed by write() causes conflicts on some devices.
       await ndef.write({ records: [] });
       
       toast({ title: "Success", description: "Tag cleared successfully!" });
@@ -112,7 +111,7 @@ export default function NFCPage() {
       console.error("NFC Clear Error:", error);
       toast({ 
         title: "Error", 
-        description: error.name === 'NotAllowedError' ? "Permission denied" : "Failed to clear tag. Try holding it closer.", 
+        description: "Failed to clear tag. Make sure the card is touching your phone and try again.", 
         variant: "destructive" 
       });
     } finally {
