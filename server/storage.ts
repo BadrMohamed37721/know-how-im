@@ -16,7 +16,7 @@ export interface IStorage {
   // Profile
   getProfile(id: number): Promise<Profile | undefined>;
   getProfileByUserId(userId: string): Promise<Profile | undefined>;
-  getProfileBySlug(slug: string): Promise<(Profile & { links: Link[] }) | undefined>;
+  getProfileBySlug(slug: string): Promise<(Profile & { links: Link[]; isActivated: boolean }) | undefined>;
   createProfile(profile: InsertProfile & { userId: string }): Promise<Profile>;
   updateProfile(id: number, updates: Partial<InsertProfile>): Promise<Profile>;
 
@@ -69,9 +69,11 @@ export class DatabaseStorage implements IStorage {
     return profile;
   }
 
-  async getProfileBySlug(slug: string): Promise<(Profile & { links: Link[] }) | undefined> {
+  async getProfileBySlug(slug: string): Promise<(Profile & { links: Link[]; isActivated: boolean }) | undefined> {
     const [profile] = await db.select().from(profiles).where(eq(profiles.slug, slug));
     if (!profile) return undefined;
+
+    const [user] = await db.select().from(users).where(eq(users.id, profile.userId));
     
     const profileLinks = await db
       .select()
@@ -79,7 +81,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(links.profileId, profile.id))
       .orderBy(asc(links.order));
       
-    return { ...profile, links: profileLinks };
+    return { ...profile, links: profileLinks, isActivated: !!user?.isActivated };
   }
 
   async createProfile(profile: InsertProfile & { userId: string }): Promise<Profile> {

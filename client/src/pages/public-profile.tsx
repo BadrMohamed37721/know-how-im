@@ -76,7 +76,7 @@ export default function PublicProfile() {
   }
 
   // NFC Activation Check
-  if (!profile.isActivated) {
+  if (!(profile as any).isActivated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50 p-4">
         <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl text-center space-y-4 border-2 border-red-100">
