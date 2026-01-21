@@ -1,30 +1,7 @@
-import { useState } from "react";
-import ReactImageCrop, { Crop } from "react-image-crop";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-
-// CSS for react-image-crop
-const cropStyles = `
-  .ReactImageCrop {
-    display: inline-block;
-    position: relative;
-  }
-  .ReactImageCrop__image {
-    display: block;
-    max-width: 100%;
-  }
-  .ReactImageCrop__crop-selection {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: inset 0 0 0 9999em rgba(0, 0, 0, 0.3);
-  }
-`;
 
 interface ImageCropperProps {
   imageSrc: string;
@@ -33,57 +10,37 @@ interface ImageCropperProps {
 }
 
 export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCropperProps) {
-  const [crop, setCrop] = useState<Crop>({
-    unit: "%",
-    width: 90,
-    height: 90,
-    x: 5,
-    y: 5,
-  });
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const [scale, setScale] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleCropImage = async () => {
     setIsProcessing(true);
     try {
-      const image = new Image();
-      image.src = imageSrc;
+      if (!imageRef.current || !canvasRef.current) return;
 
-      image.onload = () => {
-        const canvas = document.createElement("canvas");
-        const pixelRatio = window.devicePixelRatio || 1;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-        const cropX = (crop.x || 0) * image.width / 100;
-        const cropY = (crop.y || 0) * image.height / 100;
-        const cropWidth = (crop.width || 100) * image.width / 100;
-        const cropHeight = (crop.height || 100) * image.height / 100;
+      const img = imageRef.current;
+      const size = Math.min(img.width, img.height);
+      const x = (img.width - size) / 2;
+      const y = (img.height - size) / 2;
 
-        canvas.width = cropWidth * pixelRatio * scale;
-        canvas.height = cropHeight * pixelRatio * scale;
+      canvas.width = size * scale;
+      canvas.height = size * scale;
 
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(
-            image,
-            cropX,
-            cropY,
-            cropWidth,
-            cropHeight,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
+      ctx.drawImage(img, x, y, size, size, 0, 0, canvas.width, canvas.height);
 
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const file = new File([blob], "cropped-image.jpg", { type: "image/jpeg" });
-              onCropComplete(file);
-            }
-            setIsProcessing(false);
-          }, "image/jpeg", 0.95);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], "cropped-image.jpg", { type: "image/jpeg" });
+          onCropComplete(file);
         }
-      };
+        setIsProcessing(false);
+      }, "image/jpeg", 0.95);
     } catch (error) {
       console.error("Error cropping image:", error);
       setIsProcessing(false);
@@ -91,28 +48,27 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
   };
 
   return (
-    <>
-      <style>{cropStyles}</style>
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Crop & Scale Photo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="border rounded-lg overflow-hidden bg-muted">
-            <ReactImageCrop
-              crop={crop}
-              onChange={(c) => setCrop(c)}
-              aspect={1}
-              circularCrop
-            >
-              <img 
-                src={imageSrc} 
-                style={{ transform: `scale(${scale})`, transformOrigin: "center" }}
-                className="w-full"
-                alt="Crop preview"
-              />
-            </ReactImageCrop>
-          </div>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Crop & Scale Photo</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+          <img
+            ref={imageRef}
+            src={imageSrc}
+            style={{
+              maxWidth: "400px",
+              maxHeight: "400px",
+              transform: `scale(${scale})`,
+              transformOrigin: "center",
+            }}
+            alt="Crop preview"
+            onLoad={() => {
+              // Reset on load
+            }}
+          />
+        </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Scale: {Math.round(scale * 100)}%</label>
@@ -126,21 +82,22 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
             className="w-full cursor-pointer"
           />
           <p className="text-xs text-muted-foreground">
-            Use the slider to zoom in/out. Drag to adjust the crop area.
+            Use the slider to zoom in/out before cropping.
           </p>
         </div>
 
-          <div className="flex gap-3 justify-end">
-            <Button variant="outline" onClick={onCancel} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button onClick={handleCropImage} disabled={isProcessing}>
-              {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : ""}
-              Apply Crop
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </>
+        <div className="flex gap-3 justify-end">
+          <Button variant="outline" onClick={onCancel} disabled={isProcessing}>
+            Cancel
+          </Button>
+          <Button onClick={handleCropImage} disabled={isProcessing}>
+            {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : ""}
+            Apply Crop
+          </Button>
+        </div>
+
+        <canvas ref={canvasRef} className="hidden" />
+      </CardContent>
+    </Card>
   );
 }
