@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,6 +15,8 @@ export default function NFCPage() {
   const [isClearing, setIsClearing] = useState(false);
   const [checkingId, setCheckingId] = useState("");
   const [verificationState, setVerificationState] = useState<{isVerified: boolean, isClaimed: boolean, isYours: boolean} | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  
   const { data: myTag, isLoading: isLoadingTag } = useQuery<any>({
     queryKey: ["/api/nfc/my-tag"],
   });
