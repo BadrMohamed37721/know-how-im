@@ -77,23 +77,33 @@ export default function PublicProfile() {
   const generateQR = async () => {
     setIsGeneratingQR(true);
     try {
+      // Check if user is logged in first by fetching profile/me or similar
+      // but simpler: just try the generation and handle 401
       const res = await fetch("/api/profiles/qr/generate", { method: "POST" });
-      if (res.status === 401) {
-        // If not logged in, we'll just show a direct QR to the public profile
-        // instead of the temporary tracking one. This is "simpler" and works
-        // for guests viewing their own profile via a link.
+      
+      if (res.status === 401 || res.status === 403) {
+        // GUEST MODE: Show direct link QR
         setQrData({ token: "public", expiresAt: new Date(Date.now() + 3600000).toISOString() });
         setTimeLeft(3600);
         setShowQR(true);
         return;
       }
+
+      if (!res.ok) {
+        throw new Error("Failed to generate QR");
+      }
+
       const data = await res.json();
       setQrData(data);
       const expiry = new Date(data.expiresAt).getTime();
       setTimeLeft(Math.floor((expiry - Date.now()) / 1000));
       setShowQR(true);
     } catch (err) {
-      console.error(err);
+      console.error("QR Generate Error:", err);
+      // Fallback for any error: show public QR
+      setQrData({ token: "public", expiresAt: new Date(Date.now() + 3600000).toISOString() });
+      setTimeLeft(3600);
+      setShowQR(true);
     } finally {
       setIsGeneratingQR(false);
     }
