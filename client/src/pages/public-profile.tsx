@@ -79,7 +79,12 @@ export default function PublicProfile() {
     try {
       const res = await fetch("/api/profiles/qr/generate", { method: "POST" });
       if (res.status === 401) {
-        alert("Please log in to pick your sharing QR code.");
+        // If not logged in, we'll just show a direct QR to the public profile
+        // instead of the temporary tracking one. This is "simpler" and works
+        // for guests viewing their own profile via a link.
+        setQrData({ token: "public", expiresAt: new Date(Date.now() + 3600000).toISOString() });
+        setTimeLeft(3600);
+        setShowQR(true);
         return;
       }
       const data = await res.json();
@@ -312,7 +317,7 @@ END:VCARD`;
               {qrData && timeLeft > 0 ? (
                 <div className="p-4 bg-white rounded-2xl shadow-inner border">
                   <QRCodeSVG 
-                    value={`${window.location.origin}/qr/${qrData.token}`}
+                    value={qrData.token === "public" ? window.location.href : `${window.location.origin}/qr/${qrData.token}`}
                     size={200}
                     level="H"
                     includeMargin={true}
